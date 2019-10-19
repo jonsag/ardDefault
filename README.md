@@ -14,10 +14,14 @@ Then you can do
 >$ echo "Hello Arduino" > /dev/ttyUSB0
 
 to send the string (followed by a newline) to your Arduino  
+
 You can also do  
 >$ tail -f /dev/ttyUSB0
 
 to read what your Arduino has to tell you  
+
+If the above doesn't work, try  
+>$ cat < /dev/ttyUSB0
 
 Using busybox to provide an interactive session with Arduino
 ==========
