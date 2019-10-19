@@ -43,15 +43,32 @@ Servo myservo;  // create servo object to control a servo
 /*******************************
    Pin setup
  *******************************/
-int potpin = 3;  // analog pin used to connect the potentiometer
+int inputPotPin = 3;  // analog pin used to connect the potentiometer
+int processValuePotPin = 2 ; // analog pin to recieve process value from potentiometer attached to LCD
 int servoPin = 9; // pin the servo is connectod to
 
 /*******************************
    Misc variables
  *******************************/
-int val;    // variable to read the value from the analog pin
-int valLength; // stores number of digits in int
-String valString; // stores int coverted to string
+int SPt; // variable to read the value from the analog pin, Set Point
+int SVa; // variable to store the Servo Value
+int PVa; // input from potentiometer attached to servo, Process Value
+
+int valLength; // stores integer to count length of
+String valString; // stores integer coverted to string
+
+int Xoffset; // how far out the LCD should it be printed
+int Yline; // what line should message be printed at
+int totLength; // total length of text + digits to LCD
+int noOfChars; // number of digits in integer
+int noOfDigits; // number of characters in string
+
+/*******************************
+   Text variables
+ *******************************/
+String SPtText = "SP:";
+String SVaText = "SV:";
+String PVaText = "PV:";
 
 void setup() {
   // start LCD
@@ -85,42 +102,81 @@ void setup() {
 }
 
 void loop() {
-  val = analogRead(potpin);            // reads the value of the potentiometer (value between 0 and 1023)
-
-  // print val to LCD
-  lcd.setCursor(0, 0);
-  lcd.print("Pot val: ");
-  lcd.setCursor(9, 0);
-  lcd.print(val);
-  valLength = intToStringToLength(val);
-  lcd.setCursor(9 + valLength, 0);
+  SPt = analogRead(inputPotPin);            // SetPoint, reads the value of the potentiometer (value between 0 and 1023)
+  PVa = analogRead(processValuePotPin);            // ProcessValue, reads the value of the potentiometer (value between 0 and 1023)
+  
+  // print set point to LCD
+  Xoffset = 0;
+  Yline = 0;
+  lcd.setCursor(Xoffset, Yline);
+  lcd.print(SPtText);
+  noOfChars = SPtText.length(); // number of characters before digits
+  lcd.setCursor(Xoffset + noOfChars, Yline);
+  lcd.print(SPt);
+  noOfDigits = intToStringToLength(SPt);
+  totLength = noOfChars + noOfDigits;
+  lcd.setCursor(Xoffset + totLength, Yline);
   lcd.print("   ");
-  // print val to serial
-  Serial.print("Pot val: ");
-  Serial.print(val);
+  // print to serial
+  Serial.print("Set Point: ");
+  Serial.print(SPt);
+  Serial.print(", No of digits:");
+  Serial.print(noOfDigits);
 
-  val = map(val, 0, 1023, 0, 180);     // scale it to use it with the servo (value between 0 and 180)
+  SVa = map(SPt, 0, 1023, 0, 180);     // ServoValue, scale it to use it with the servo (value between 0 and 180)
 
-  // print val to LCD
-  lcd.setCursor(0, 1);
-  lcd.print("Servo val: ");
-  lcd.setCursor(11, 1);
-  lcd.print(val);
-  valLength = intToStringToLength(val);
-  lcd.setCursor(11 + valLength, 1);
+  // print servo value to LCD
+  Xoffset = 9;
+  Yline = 0;
+  lcd.setCursor(Xoffset, Yline);
+  lcd.print(SVaText);
+  noOfChars = SVaText.length(); // number of characters before digits
+  lcd.setCursor(Xoffset + noOfChars, Yline);
+  lcd.print(SVa);
+  noOfDigits = intToStringToLength(SVa);
+  totLength = noOfChars + noOfDigits;
+  lcd.setCursor(Xoffset + totLength, Yline);
   lcd.print((char)223); // prints degree sign
-  lcd.setCursor(11 + valLength + 1, 1);
+  lcd.setCursor(Xoffset + totLength + 1, Yline);
   lcd.print("  ");
-  // print val to serial
-  Serial.print(", Servo val: ");
-  Serial.println(val);
+  // print to serial
+  Serial.print(", Servo value: ");
+  Serial.print(SVa);
+  Serial.print(", No of digits:");
+  Serial.print(noOfDigits);
+  Serial.println();
 
-  myservo.write(val);                  // sets the servo position according to the scaled value
+  // print process value to LCD
+  Xoffset = 0;
+  Yline = 1;
+  lcd.setCursor(Xoffset, Yline);
+  lcd.print(PVaText);
+  noOfChars = PVaText.length(); // number of characters before digits
+  lcd.setCursor(Xoffset + noOfChars, Yline);
+  lcd.print(PVa);
+  noOfDigits = intToStringToLength(PVa);
+  totLength = noOfChars + noOfDigits;
+  lcd.setCursor(Xoffset + totLength, Yline);
+  lcd.print("   ");
+  // print to serial
+  Serial.print("Set Point: ");
+  Serial.print(PVa);
+  Serial.print(", No of digits:");
+  Serial.print(noOfDigits);
+  
+  myservo.write(SVa);                  // sets the servo position according to the scaled value
   delay(15);                           // waits for the servo to get there
 }
 
-int intToStringToLength(int val) { // returns how many numbers in integer
-  valString = String(val);
+int intToStringToLength(int valInt) { // returns how many numbers in integer
+  valString = String(valInt);
   valLength = valString.length();
+  return valLength;
+}
+
+int doubleToStringToLength(float valDouble) { // returns how many numbers in integer
+  int valInt = valDouble * 10;
+  valString = String(valInt);
+  valLength = valString.length() + 1;
   return valLength;
 }
